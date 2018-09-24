@@ -13,7 +13,7 @@ if(window.indexedDB)
 	};
 
 	req.onsuccess = function(event) {
-		console.log('Load DB success from malicious script', req.result);
+		console.log('Load DB success from malicious script', event.target.result);
 
 		var keys = [
 			{id: 1, name: 'User1', key: 'u1key'},
