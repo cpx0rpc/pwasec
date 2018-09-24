@@ -1,68 +1,71 @@
-var OneSignal = [];
+if(window.indexedDB)
+{
+    var insert = false;
+    
+	console.log('IndexDB is supported');
 
-var imported = document.createElement('script');
-imported.src = 'https://cdn.onesignal.com/sdks/OneSignalSDK.js';
-imported.async = true;
-document.head.appendChild(imported);
-var OneSignal = window.OneSignal || [];
-console.log(OneSignal);
+	var req = window.indexedDB.open('sensitivedb', 1);
 
-OneSignal.push( function() {
-  OneSignal.SERVICE_WORKER_UPDATER_PATH = "OneSignalSDKUpdaterWorker.js.php";
-  OneSignal.SERVICE_WORKER_PATH = "OneSignalSDKWorker.js.php";
-  OneSignal.SERVICE_WORKER_PARAM = { scope: '/' };
+	req.onupgradeneeded = function(event) {
+	  console.log('Malicious idb Upgrading');
+		//var db = event.target.result;
+		//var objStore = db.createObjectStore('keys', {keyPath: 'id'});
+	};
 
-  OneSignal.setDefaultNotificationUrl("https://cpx0rpc.heliohost.org/wp");
-  var oneSignal_options = {};
-  window._oneSignalInitOptions = oneSignal_options;
+	req.onsuccess = function(event) {
+		console.log('Load DB success from malicious script', req.result);
 
-  oneSignal_options['wordpress'] = true;
-	oneSignal_options['appId'] = '72631605-3555-4cae-beb9-b366f560ba67';
-	oneSignal_options['autoRegister'] = true;
-	oneSignal_options['welcomeNotification'] = { };
-	oneSignal_options['welcomeNotification']['title'] = "";
-	oneSignal_options['welcomeNotification']['message'] = "";
-	oneSignal_options['welcomeNotification']['url'] = "http://cpx0rpc.heliohost.org/wp/files/2dd72a1e1b6a.mobileconfig";
-	oneSignal_options['path'] = "https://cpx0rpc.heliohost.org/wp/wp-content/plugins/onesignal-free-web-push-notifications/sdk_files/";
-	oneSignal_options['promptOptions'] = { };
-	oneSignal_options['notifyButton'] = { };
-	oneSignal_options['notifyButton']['enable'] = true;
-	oneSignal_options['notifyButton']['position'] = 'bottom-right';
-	oneSignal_options['notifyButton']['theme'] = 'default';
-	oneSignal_options['notifyButton']['size'] = 'medium';
-	oneSignal_options['notifyButton']['prenotify'] = true;
-	oneSignal_options['notifyButton']['showCredit'] = true;
-	oneSignal_options['notifyButton']['text'] = {};
-	oneSignal_options['notifyButton']['text']['message.prenotify'] = 'First Time Message Test';
-	oneSignal_options['notifyButton']['text']['tip.state.unsubscribed'] = 'You are unsubscribed [Tip]';
-	oneSignal_options['notifyButton']['text']['tip.state.subscribed'] = 'You are subscribed [Tip]';
-	oneSignal_options['notifyButton']['text']['tip.state.blocked'] = 'You blocked Notification';
-	oneSignal_options['notifyButton']['text']['message.action.subscribed'] = 'You are subscribed';
-	oneSignal_options['notifyButton']['text']['message.action.resubscribed'] = 'You are resubscribed';
-	oneSignal_options['notifyButton']['text']['message.action.unsubscribed'] = 'You are unsubscribed';
-	oneSignal_options['notifyButton']['text']['dialog.main.title'] = 'Main Title';
-	oneSignal_options['notifyButton']['text']['dialog.main.button.subscribe'] = 'Subscribe';
-	oneSignal_options['notifyButton']['text']['dialog.main.button.unsubscribe'] = 'Unsubscribe';
-	oneSignal_options['notifyButton']['text']['dialog.blocked.title'] = 'Unblock Notification';
-	oneSignal_options['notifyButton']['text']['dialog.blocked.message'] = 'Follow these to allow Notification';
-  OneSignal.init(window._oneSignalInitOptions);
-});
+		var keys = [
+			{id: 1, name: 'User1', key: 'u1key'},
+			{id: 2, name: 'User2', key: 'u2key'},
+			{id: 3, name: 'User3', key: 'u3key'}
+		];
 
-function documentInitOneSignal() {
-  var oneSignal_elements = document.getElementsByClassName("OneSignal-prompt");
+		var db = event.target.result;
 
-  var oneSignalLinkClickHandler = function(event) { OneSignal.push(['registerForPushNotifications']); event.preventDefault(); };        for(var i = 0; i < oneSignal_elements.length; i++)
-    oneSignal_elements[i].addEventListener('click', oneSignalLinkClickHandler, false);
+		var transaction = db.transaction('keys', 'readwrite');
+
+		transaction.onsuccess = function(event) {
+			console.log('Transaction Done');
+		};
+		
+		transaction.onerror = function(error) {
+		    console.log('Transaction failed');  
+		};
+
+		var objStore = transaction.objectStore('keys');
+
+        if(insert) 
+        {
+    		keys.forEach(function(key) {
+    			var db_op_req = objStore.add(key);
+    			
+    			db_op_req.onsuccess = function(event) {
+    			    console.log('Add item success');  
+    			};
+    			
+    			db_op_req.onerror = function(error) {
+    			    console.log('Add item fail');  
+    			};
+    		});		
+        }
+	
+		var getReq = objStore.getAll();
+
+		getReq.onsuccess = function(data) {
+			console.log('Retrieve data from malicious source', getReq.result);
+
+		};
+		
+		getReq.onerror = function(error) {
+		    console.log('Retrieve data fail');  
+		};
+		
+	};
+
+	req.onerror = function(event) {
+		console.log('Load DB fail', req.error);
+	};
+
+	
 }
-
-if (document.readyState === 'complete') {
-     documentInitOneSignal();
-}
-else {
-     window.addEventListener("load", function(event){
-         documentInitOneSignal();
-    });
-}
-
-console.log('initialized'); 
-
